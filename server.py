@@ -53,26 +53,13 @@ def run_download(job_id, query):
     out_dir = os.path.join(DOWNLOAD_DIR, job_id)
     os.makedirs(out_dir, exist_ok=True)
 
-    jobs[job_id]['status'] = 'trying spotdl...'
-    try:
-        subprocess.run(
-            ['spotdl', 'download', query, '--output', out_dir + '/{artist} - {title}.{output-ext}', '--format', 'flac'],
-            capture_output=True, text=True, timeout=60
-        )
-        files = [f for f in os.listdir(out_dir) if f.endswith('.flac')]
-        if files:
-            jobs[job_id].update({'status': 'done', 'file': os.path.join(out_dir, files[0]), 'filename': files[0]})
-            return
-    except Exception:
-        pass
-
-    jobs[job_id]['status'] = 'spotdl failed — trying yt-dlp...'
+    jobs[job_id]['status'] = 'pulling...'
     try:
         subprocess.run(
             ['yt-dlp', f'ytsearch5:{query} official audio',
              '--match-filter', '!is_live & duration>60',
              '--extract-audio', '--audio-format', 'mp3', '--audio-quality', '0',
-             '-o', out_dir + '/%(artist)s - %(title)s.%(ext)s',
+             '-o', out_dir + '/%(uploader|artist|creator)s - %(title)s.%(ext)s',
              '--no-playlist', '--playlist-items', '1'],
             capture_output=True, text=True, timeout=120
         )
