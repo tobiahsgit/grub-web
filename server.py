@@ -58,9 +58,9 @@ def run_download(job_id, query):
         subprocess.run(
             ['yt-dlp', f'ytsearch5:{query} official audio',
              '--match-filter', '!is_live & duration>60',
-             '--extract-audio', '--audio-format', 'mp3', '--audio-quality', '0',
+             '--extract-audio', '--audio-format', 'mp3', '--audio-quality', '0', '--prefer-free-formats', '--audio-quality', '0',
              '-o', out_dir + '/%(uploader|artist|creator)s - %(title)s.%(ext)s',
-             '--no-playlist', '--playlist-items', '1'],
+             '--no-playlist', '--format', 'bestaudio[ext!=webm]/bestaudio', '--playlist-items', '1'],
             capture_output=True, text=True, timeout=120
         )
         files = [f for f in os.listdir(out_dir) if f.endswith('.mp3')]
