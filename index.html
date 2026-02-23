@@ -6,38 +6,114 @@
 <title>GRUB</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #0a0a0a; color: #fff; font-family: monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
+  body { background: #0a0a0a; color: #fff; font-family: monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 48px 20px 40px; }
   .logo { font-size: 48px; font-weight: 900; letter-spacing: -2px; color: #ff3a00; margin-bottom: 8px; }
-  .sub { font-size: 11px; color: rgba(255,255,255,0.3); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 48px; }
+  .sub { font-size: 11px; color: rgba(255,255,255,0.3); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 32px; }
+
+  /* tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 4px; }
+  .tab { padding: 8px 24px; border-radius: 6px; font-family: monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border: none; background: transparent; color: rgba(255,255,255,0.3); transition: all 0.2s; }
+  .tab.active { background: #ff3a00; color: #fff; }
+
+  /* inputs */
   .search-wrap { display: flex; gap: 8px; width: 100%; max-width: 560px; margin-bottom: 16px; }
   input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px 18px; color: #fff; font-family: monospace; font-size: 13px; outline: none; }
   input::placeholder { color: rgba(255,255,255,0.3); }
   input:focus { border-color: rgba(255,58,0,0.5); }
-  button { background: #ff3a00; color: #fff; border: none; border-radius: 8px; padding: 14px 24px; font-family: monospace; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 1px; text-transform: uppercase; transition: opacity 0.2s; }
-  button:hover { opacity: 0.85; }
-  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.primary { background: #ff3a00; color: #fff; border: none; border-radius: 8px; padding: 14px 24px; font-family: monospace; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 1px; text-transform: uppercase; transition: opacity 0.2s; }
+  button.primary:hover { opacity: 0.85; }
+  button.primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* pull panel */
+  #pullPanel { width: 100%; max-width: 560px; display: flex; flex-direction: column; align-items: center; }
   .status { font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 1px; min-height: 20px; text-align: center; }
   .status.active { color: #ff3a00; }
   .status.done { color: #00ff88; }
   .status.error { color: #ff5252; }
-  .download-btn { margin-top: 24px; background: transparent; border: 1px solid #00ff88; color: #00ff88; display: none; }
+  .download-btn { margin-top: 24px; background: transparent; border: 1px solid #00ff88; color: #00ff88; border-radius: 8px; padding: 14px 32px; font-family: monospace; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 1px; text-transform: uppercase; display: none; }
   .download-btn.visible { display: block; }
-  .hint { margin-top: 48px; font-size: 10px; color: rgba(255,255,255,0.2); text-align: center; line-height: 1.8; letter-spacing: 1px; }
+
+  /* search panel */
+  #searchPanel { width: 100%; max-width: 560px; display: none; flex-direction: column; align-items: center; }
+  #searchPanel.active { display: flex; }
+
+  /* results */
+  #results { width: 100%; margin-top: 8px; }
+  .result { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor: default; }
+  .result:hover { background: rgba(255,255,255,0.03); }
+  .result-thumb { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; background: rgba(255,255,255,0.06); flex-shrink: 0; }
+  .result-info { flex: 1; min-width: 0; }
+  .result-title { font-size: 12px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .result-meta { font-size: 10px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+  .result-pull { background: transparent; border: 1px solid rgba(255,58,0,0.4); color: #ff3a00; border-radius: 4px; padding: 5px 12px; font-family: monospace; font-size: 9px; letter-spacing: 1px; cursor: pointer; flex-shrink: 0; transition: all 0.2s; }
+  .result-pull:hover { background: #ff3a00; color: #fff; }
+  .result-pull.done { border-color: #00ff88; color: #00ff88; cursor: default; }
+  .result-pull.loading { opacity: 0.5; cursor: not-allowed; }
+
+  /* pagination */
+  .pagination { display: flex; gap: 8px; margin-top: 16px; align-items: center; }
+  .page-btn { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.5); border-radius: 6px; padding: 8px 16px; font-family: monospace; font-size: 10px; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; }
+  .page-btn:hover:not(:disabled) { border-color: #ff3a00; color: #ff3a00; }
+  .page-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+  .page-info { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 1px; }
+
+  .search-status { font-size: 11px; color: rgba(255,58,0,0.8); letter-spacing: 1px; margin-top: 8px; min-height: 18px; }
+
+  .hint { margin-top: 40px; font-size: 10px; color: rgba(255,255,255,0.15); text-align: center; letter-spacing: 1px; }
 </style>
 </head>
 <body>
 <div class="logo">GRUB</div>
 <div class="sub">sample hunter</div>
-<div class="search-wrap">
-  <input id="q" type="text" placeholder="artist — title or paste a spotify / tidal link" />
-  <button id="pullBtn" onclick="pull()">PULL</button>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('pull')">PULL</button>
+  <button class="tab" onclick="switchTab('search')">SEARCH</button>
 </div>
-<div id="status" class="status"></div>
-<button id="dlBtn" class="download-btn" onclick="triggerDownload()">↓ DOWNLOAD</button>
-<div class="hint">yt-dlp · mp3 · clean filenames</div>
+
+<!-- PULL PANEL -->
+<div id="pullPanel">
+  <div class="search-wrap">
+    <input id="q" type="text" placeholder="artist — title or paste a link" />
+    <button class="primary" id="pullBtn" onclick="pull()">PULL</button>
+  </div>
+  <div id="status" class="status"></div>
+  <button id="dlBtn" class="download-btn" onclick="triggerDownload()">↓ DOWNLOAD</button>
+</div>
+
+<!-- SEARCH PANEL -->
+<div id="searchPanel">
+  <div class="search-wrap">
+    <input id="sq" type="text" placeholder="search artist or track..." />
+    <button class="primary" id="searchBtn" onclick="doSearch(1)">SEARCH</button>
+  </div>
+  <div id="searchStatus" class="search-status"></div>
+  <div id="results"></div>
+  <div class="pagination" id="pagination" style="display:none">
+    <button class="page-btn" id="prevBtn" onclick="changePage(-1)" disabled>← PREV</button>
+    <span class="page-info" id="pageInfo">PAGE 1</span>
+    <button class="page-btn" id="nextBtn" onclick="changePage(1)">NEXT →</button>
+  </div>
+</div>
+
+<div class="hint">yt-dlp · mp3</div>
+
 <script>
 let currentJobId = null;
 let pollInterval = null;
+let currentPage = 1;
+let hasMore = false;
+let activeDownloads = {};
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='pull')||(i===1&&tab==='search')));
+  document.getElementById('pullPanel').style.display = tab === 'pull' ? 'flex' : 'none';
+  document.getElementById('searchPanel').classList.toggle('active', tab === 'search');
+  document.getElementById('pullPanel').style.flexDirection = 'column';
+  document.getElementById('pullPanel').style.alignItems = 'center';
+}
+
+// PULL TAB
 async function pull() {
   const q = document.getElementById('q').value.trim();
   if (!q) return;
@@ -84,7 +160,88 @@ function setStatus(msg, type) {
   el.textContent = msg;
   el.className = 'status ' + (type || '');
 }
+
+// SEARCH TAB
+async function doSearch(page) {
+  const q = document.getElementById('sq').value.trim();
+  if (!q) return;
+  currentPage = page;
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = true;
+  document.getElementById('searchStatus').textContent = 'searching...';
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('pagination').style.display = 'none';
+  try {
+    const res = await fetch('/api/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: q, page }) });
+    const data = await res.json();
+    if (data.error) { document.getElementById('searchStatus').textContent = data.error; btn.disabled = false; return; }
+    hasMore = data.has_more;
+    renderResults(data.tracks);
+    document.getElementById('searchStatus').textContent = data.tracks.length ? '' : 'no results';
+    updatePagination();
+  } catch(e) { document.getElementById('searchStatus').textContent = 'search failed'; }
+  btn.disabled = false;
+}
+
+function renderResults(tracks) {
+  const el = document.getElementById('results');
+  el.innerHTML = tracks.map((t, i) => `
+    <div class="result">
+      ${t.thumb ? `<img class="result-thumb" src="${t.thumb}" onerror="this.style.display='none'"/>` : '<div class="result-thumb"></div>'}
+      <div class="result-info">
+        <div class="result-title">${escHtml(t.title)}</div>
+        <div class="result-meta">${escHtml(t.uploader)} · ${t.duration}</div>
+      </div>
+      <button class="result-pull" id="rp${i}" onclick="pullResult(this, '${escAttr(t.url)}', '${escAttr(t.title)}')">PULL</button>
+    </div>
+  `).join('');
+}
+
+async function pullResult(btn, url, title) {
+  if (btn.classList.contains('done') || btn.classList.contains('loading')) return;
+  btn.classList.add('loading');
+  btn.textContent = '...';
+  try {
+    const res = await fetch('/api/pull', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+    const data = await res.json();
+    if (data.error) { btn.classList.remove('loading'); btn.textContent = 'ERR'; return; }
+    const jobId = data.job_id;
+    const poll = setInterval(async () => {
+      const r = await fetch('/api/status/' + jobId);
+      const d = await r.json();
+      if (d.status === 'done') {
+        clearInterval(poll);
+        btn.classList.remove('loading');
+        btn.classList.add('done');
+        btn.textContent = '✓';
+        // auto-trigger download
+        window.location.href = '/api/download/' + jobId;
+      } else if (d.status === 'error') {
+        clearInterval(poll);
+        btn.classList.remove('loading');
+        btn.textContent = 'ERR';
+      }
+    }, 1500);
+  } catch(e) { btn.classList.remove('loading'); btn.textContent = 'ERR'; }
+}
+
+function updatePagination() {
+  const pg = document.getElementById('pagination');
+  pg.style.display = 'flex';
+  document.getElementById('prevBtn').disabled = currentPage <= 1;
+  document.getElementById('nextBtn').disabled = !hasMore;
+  document.getElementById('pageInfo').textContent = 'PAGE ' + currentPage;
+}
+
+function changePage(dir) {
+  doSearch(currentPage + dir);
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
 document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') pull(); });
+document.getElementById('sq').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(1); });
 </script>
 </body>
 </html>
